@@ -120,7 +120,7 @@ class LogicClassifier(nn.Module):
         self.n_logic_neurons = n_logic_neurons
         self.device = device
 
-        from difflogic.difflogic_noxor import LogicLayer
+        from difflogic.difflogic import LogicLayer
         layers = []
 
         layers.append(LogicLayer(
