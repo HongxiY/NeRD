@@ -1,12 +1,3 @@
-"""
-Differentiable Logic Layer implementation.
-Pure PyTorch implementation (no CUDA dependency).
-
-This version PROPERLY excludes XOR (gate 6) and XNOR (gate 9).
-
-FIX: Initialize excluded gate weights to -inf and freeze their gradients.
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,41 +5,20 @@ import numpy as np
 
 from .functional import bin_op_s, GradFactor
 
-# Gates to exclude (XOR=6, XNOR=9)
 EXCLUDED_GATES = [6, 9]
 
 
 def create_random_onehot_tensor(n, m=16, excluded_gates=None):
-    """Create random one-hot tensor for fixed gates initialization.
-
-    Args:
-        n: Number of neurons
-        m: Total number of gate types (16)
-        excluded_gates: List of gate indices to exclude
-    """
     if excluded_gates is None:
         excluded_gates = []
 
-    # Valid gates (excluding the ones we don't want)
     valid_gates = [i for i in range(m) if i not in excluded_gates]
 
-    # Random select from valid gates only
     indices = torch.tensor([valid_gates[i] for i in torch.randint(0, len(valid_gates), (n,))])
     return F.one_hot(indices, num_classes=m).float()
 
 
 class LogicLayer(nn.Module):
-    """
-    Differentiable logic gate layer.
-
-    Each neuron computes a soft combination of binary logic operations
-    on two input concepts.
-
-    This version excludes XOR and XNOR gates PROPERLY by:
-    1. Initializing their weights to -inf
-    2. Using a hook to zero their gradients
-    """
-
     def __init__(
             self,
             in_dim: int,
@@ -60,18 +30,6 @@ class LogicLayer(nn.Module):
             n_logic_gates: int = 16,
             concept_pairs: torch.Tensor = None
     ):
-        """
-        Args:
-            in_dim: Input dimensionality (number of concepts)
-            out_dim: Output dimensionality (number of logic neurons)
-            device: Device to use ('cuda' or 'cpu')
-            grad_factor: Gradient scaling factor (for deep networks)
-            connections: How to connect inputs ('random', 'correlated')
-            fixed_gates: If True, use fixed random gates instead of learned
-            n_logic_gates: Number of logic gate types (default 16)
-            concept_pairs: Pre-defined concept pairs for 'correlated' connections
-                          Shape: (out_dim, 2) where each row is (idx_a, idx_b)
-        """
         super().__init__()
 
         self.in_dim = in_dim
@@ -84,45 +42,35 @@ class LogicLayer(nn.Module):
         self.concept_pairs = concept_pairs
         self.excluded_gates = EXCLUDED_GATES
 
-        # Initialize gate weights
         if self.fixed_gates:
-            # Fixed random gates (not learned), excluding XOR/XNOR
             self.weights = nn.Parameter(
                 create_random_onehot_tensor(self.out_dim, self.n_logic_gates, self.excluded_gates).to(device),
                 requires_grad=False
             )
         else:
-            # Learnable gate weights - initialize with excluded gates at -inf
             init_weights = torch.randn(out_dim, self.n_logic_gates, device=device)
-            # Set excluded gates to large negative value (effectively -inf for softmax)
+
             for gate_idx in self.excluded_gates:
                 init_weights[:, gate_idx] = -1e9  # Use large negative instead of -inf for numerical stability
             self.weights = nn.Parameter(init_weights)
 
-            # Register hook to zero gradients for excluded gates
             self.weights.register_hook(self._zero_excluded_gradients)
 
-        # Initialize connections
         self.indices = self._get_connections(connections, device)
 
     def _zero_excluded_gradients(self, grad):
-        """Hook to zero out gradients for excluded gates."""
         grad = grad.clone()
         for gate_idx in self.excluded_gates:
             grad[:, gate_idx] = 0
         return grad
 
     def _get_connections(self, connections, device):
-        """Get input connection indices for each neuron."""
-
         if connections == 'random':
-            # Random connections
             c = torch.randperm(2 * self.out_dim) % self.in_dim
             c = c.reshape(2, self.out_dim)
             a, b = c[0], c[1]
 
         elif connections == 'correlated':
-            # Use pre-defined concept pairs
             if self.concept_pairs is None:
                 raise ValueError("concept_pairs must be provided for 'correlated' connections")
             a = self.concept_pairs[:, 0]
@@ -137,16 +85,6 @@ class LogicLayer(nn.Module):
         return a, b
 
     def forward(self, x):
-        """
-        Forward pass through the logic layer.
-
-        Args:
-            x: Input tensor of shape (batch_size, in_dim)
-               Values should be in [0, 1] (soft binary)
-
-        Returns:
-            Output tensor of shape (batch_size, out_dim)
-        """
         if self.grad_factor != 1.:
             x = GradFactor.apply(x, self.grad_factor)
 
@@ -156,16 +94,12 @@ class LogicLayer(nn.Module):
         b = x[..., b_idx]  # (batch_size, out_dim)
 
         if self.training:
-            # Soft gate selection during training
             if self.fixed_gates:
                 gate_weights = self.weights
             else:
-                # Softmax will naturally give ~0 probability to gates with -1e9 weights
                 gate_weights = F.softmax(self.weights, dim=-1)
             out = bin_op_s(a, b, gate_weights)
         else:
-            # Hard gate selection during inference
-            # argmax will never select gates with -1e9 weights
             hard_weights = F.one_hot(
                 self.weights.argmax(-1),
                 self.n_logic_gates
@@ -175,7 +109,6 @@ class LogicLayer(nn.Module):
         return out.to(torch.float32)
 
     def get_gate_distribution(self):
-        """Get the current gate type distribution (for debugging)."""
         with torch.no_grad():
             gate_probs = F.softmax(self.weights, dim=-1)
             gate_types = self.weights.argmax(-1)
@@ -186,17 +119,7 @@ class LogicLayer(nn.Module):
 
 
 class GroupSum(nn.Module):
-    """
-    Group sum module for aggregating logic neuron outputs.
-    Divides outputs into k groups and sums within each group.
-    """
-
     def __init__(self, k: int, tau: float = 1.):
-        """
-        Args:
-            k: Number of output groups (e.g., number of classes)
-            tau: Temperature for scaling the output
-        """
         super().__init__()
         self.k = k
         self.tau = tau
