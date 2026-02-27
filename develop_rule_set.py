@@ -230,7 +230,7 @@ def compute_metrics(labels, preds, probs):
     metrics = {
         'acc': accuracy_score(labels, preds),
         'balanced_acc': balanced_accuracy_score(labels, preds),
-        'sensitivity': tp / (tp + fn) if (tp + fn) > 0 else 0.0,  # Recall for positive class
+        'sensitivity': tp / (tp + fn) if (tp + fn) > 0 else 0.0,
         'specificity': tn / (tn + fp) if (tn + fp) > 0 else 0.0,
         'precision': precision_score(labels, preds, zero_division=0),
         'f1': f1_score(labels, preds, zero_division=0),
@@ -545,9 +545,9 @@ def main(args):
     log_print(f"Output directory: {args.output_dir}")
     log_print(f"  - best_model.pth: Best model checkpoint")
     log_print(f"  - training_log.txt: All training outputs")
-    log_print(f"  - test_metrics.json: Final test set metrics")
-    log_print(f"  - learned_rules.json: All learned logic rules with 2-class weights")
-    log_print(f"  - case_explanations.json: Case-level rule activations with 2-class contributions")
+    log_print(f"  - test_metrics.json: Test set metrics")
+    log_print(f"  - learned_rules.json: All learned logic rules")
+    log_print(f"  - case_explanations.json: Case-level rule activations")
 
 
 if __name__ == '__main__':
