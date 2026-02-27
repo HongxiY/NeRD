@@ -498,6 +498,6 @@ if __name__ == '__main__':
 
     if args.output is None:
         input_dir = os.path.dirname(args.input)
-        args.output = os.path.join(input_dir, 'case_explanations_simplified.json')
+        args.output = os.path.join(input_dir, 'case_simplified.json')
 
     process_file(args.input, args.output, concept_path=args.concepts, verbose_first_n=args.verbose_n)
