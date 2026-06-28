@@ -4,6 +4,7 @@ Official implementation of the paper
 **"NeRD: Neuro-Symbolic Rule Distillation for Efficient Ontology-Grounded Chain-of-Thought in Medical Image Diagnosis"**.
 
 🎉 **Accepted at MICCAI 2026.**
+
 📄 Paper: [arXiv:2606.15617](https://arxiv.org/abs/2606.15617)
 
 <p align="center">
@@ -69,17 +70,6 @@ NeRD-main/
 ├── assets/               # Place framework.png here
 └── readme.md
 ```
-
----
-
-## Installation
-
-```bash
-# Python 3.9+ recommended
-pip install torch numpy scikit-learn sympy
-```
-
-A CUDA-capable GPU is recommended for Step 1 but not required (the code falls back to CPU).
 
 ---
 
