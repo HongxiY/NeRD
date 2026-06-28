@@ -164,10 +164,3 @@ If you find this work useful, please cite:
       url={https://arxiv.org/abs/2606.15617}, 
 }
 ```
-
----
-
-## Acknowledgements
-
-- The rule-extraction component is adapted from
-  [LogicCBMs](https://github.com/deepikavemuri/LogicCBMs).
