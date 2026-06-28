@@ -3,14 +3,14 @@
 Official implementation of the paper
 **"NeRD: Neuro-Symbolic Rule Distillation for Efficient Ontology-Grounded Chain-of-Thought in Medical Image Diagnosis"**.
 
-> 🎉 **Accepted at MICCAI 2026.**
-> 📄 Paper: [arXiv:2606.15617](https://arxiv.org/abs/2606.15617)
+🎉 **Accepted at MICCAI 2026.**
+📄 Paper: [arXiv:2606.15617](https://arxiv.org/abs/2606.15617)
 
 <p align="center">
   <img src="assets/framework.jpg" width="90%" alt="NeRD framework">
 </p>
 
-> If the figure does not render, place the framework figure (Fig. 2 of the paper) at `assets/framework.png`.
+
 
 ---
 
