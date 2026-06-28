@@ -67,7 +67,7 @@ NeRD-main/
 │   ├── difflogic.py
 │   ├── functional.py
 │   └── __init__.py
-├── assets/               # Place framework.png here
+├── assets/framework.jpg              
 └── readme.md
 ```
 
